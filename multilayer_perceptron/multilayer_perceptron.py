@@ -9,6 +9,7 @@ import numpy as np
 
 from abc import ABCMeta, abstractmethod
 from scipy.optimize import fmin_l_bfgs_b
+from scipy.special import expit
 
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.externals import six
@@ -16,7 +17,7 @@ from sklearn.preprocessing import LabelBinarizer
 from sklearn.utils import gen_even_slices
 from sklearn.utils import shuffle
 from sklearn.utils import atleast2d_or_csr, check_random_state, column_or_1d
-from sklearn.utils.extmath import logistic_sigmoid, safe_sparse_dot
+from sklearn.utils.extmath import safe_sparse_dot
 
 
 def _identity(X):
@@ -108,7 +109,7 @@ class BaseMultilayerPerceptron(six.with_metaclass(ABCMeta, BaseEstimator)):
     """
     activation_functions = {
         'tanh': _tanh,
-        'logistic': logistic_sigmoid,
+        'logistic': expit,
         'softmax': _softmax
     }
     derivative_functions = {
@@ -213,7 +214,7 @@ class BaseMultilayerPerceptron(six.with_metaclass(ABCMeta, BaseEstimator)):
             self.output_func = _softmax
         # output for binary class and multi-label
         else:
-            self.output_func = logistic_sigmoid
+            self.output_func = expit
 
     def _init_t_eta_(self):
         """Initialize iteration counter attr ``t_``"""
@@ -751,7 +752,7 @@ class MultilayerPerceptronClassifier(BaseMultilayerPerceptron,
         scores = self.decision_function(X)
 
         if len(scores.shape) == 1 or self.multi_label is True:
-            scores = logistic_sigmoid(scores)
+            scores = expit(scores)
             results = (scores > 0.5).astype(np.int)
 
             if self.multi_label:
@@ -795,7 +796,7 @@ class MultilayerPerceptronClassifier(BaseMultilayerPerceptron,
         scores = self.decision_function(X)
 
         if len(scores.shape) == 1:
-            scores = logistic_sigmoid(scores)
+            scores = expit(scores)
             return np.vstack([1 - scores, scores]).T
         else:
             return _softmax(scores)
